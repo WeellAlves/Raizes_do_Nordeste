@@ -1,4 +1,3 @@
-# Raizes_do_Nordeste
 
 # 🌾 Raízes do Nordeste
 
