@@ -1,0 +1,672 @@
+{
+  "info": {
+    "name": "Raízes do Nordeste - Cenários de Teste",
+    "_postman_id": "raizes-nordeste-collection-v1",
+    "description": "Coleção de testes para a API do sistema Raízes do Nordeste. Inclui casos positivos e negativos para todas as funcionalidades principais.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.raizesnordeste.com.br/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "pedido_id", "value": "", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "1. Autenticação",
+      "item": [
+
+        {
+          "name": "TC01 - Login com sucesso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Retorna token JWT', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.token).to.be.a('string');",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "});",
+                  "pm.test('Retorna dados do usuario', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.usuario.nome).to.eql('Ana Paula');",
+                  "  pm.expect(json.usuario.pontos).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@email.com\",\n  \"senha\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+
+        {
+          "name": "TC02 - Login com senha errada (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function() { pm.response.to.have.status(401); });",
+                  "pm.test('Mensagem de erro presente', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@email.com\",\n  \"senha\": \"senhaerrada\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+
+        {
+          "name": "TC03 - Login com campos vazios (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function() { pm.response.to.have.status(400); });",
+                  "pm.test('Retorna erro de validacao', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro).to.include('obrigatório');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"\",\n  \"senha\": \"\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+
+        {
+          "name": "TC04 - Cadastro com sucesso + aceite LGPD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', function() { pm.response.to.have.status(201); });",
+                  "pm.test('Retorna ID do novo usuario', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.id).to.be.a('string');",
+                  "  pm.expect(json.lgpd_aceito).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao@email.com\",\n  \"senha\": \"senha123\",\n  \"lgpd_aceito\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/cadastro", "host": ["{{base_url}}"], "path": ["auth", "cadastro"] }
+          }
+        },
+
+        {
+          "name": "TC05 - Cadastro sem aceitar LGPD (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', function() { pm.response.to.have.status(422); });",
+                  "pm.test('Erro informa consentimento LGPD obrigatorio', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro.toLowerCase()).to.include('lgpd');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria\",\n  \"email\": \"maria@email.com\",\n  \"senha\": \"abc123\",\n  \"lgpd_aceito\": false\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/cadastro", "host": ["{{base_url}}"], "path": ["auth", "cadastro"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "2. Cardápio",
+      "item": [
+
+        {
+          "name": "TC06 - Listar cardápio por unidade (Recife)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Retorna array de produtos', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.produtos).to.be.an('array');",
+                  "  pm.expect(json.produtos.length).to.be.above(0);",
+                  "});",
+                  "pm.test('Cada produto tem campos obrigatorios', function() {",
+                  "  var json = pm.response.json();",
+                  "  json.produtos.forEach(function(p) {",
+                  "    pm.expect(p).to.have.property('id');",
+                  "    pm.expect(p).to.have.property('nome');",
+                  "    pm.expect(p).to.have.property('preco');",
+                  "    pm.expect(p).to.have.property('categoria');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/cardapio?unidade=recife",
+              "host": ["{{base_url}}"],
+              "path": ["cardapio"],
+              "query": [{ "key": "unidade", "value": "recife" }]
+            }
+          }
+        },
+
+        {
+          "name": "TC07 - Filtrar cardápio por categoria",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Todos os produtos sao da categoria sucos', function() {",
+                  "  var json = pm.response.json();",
+                  "  json.produtos.forEach(function(p) {",
+                  "    pm.expect(p.categoria).to.eql('sucos');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/cardapio?unidade=recife&categoria=sucos",
+              "host": ["{{base_url}}"],
+              "path": ["cardapio"],
+              "query": [
+                { "key": "unidade", "value": "recife" },
+                { "key": "categoria", "value": "sucos" }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "TC08 - Unidade inexistente (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', function() { pm.response.to.have.status(404); });",
+                  "pm.test('Mensagem de erro', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/cardapio?unidade=londrina",
+              "host": ["{{base_url}}"],
+              "path": ["cardapio"],
+              "query": [{ "key": "unidade", "value": "londrina" }]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "3. Pedidos",
+      "item": [
+
+        {
+          "name": "TC09 - Realizar pedido com sucesso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', function() { pm.response.to.have.status(201); });",
+                  "pm.test('Retorna ID do pedido', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.pedido_id).to.be.a('string');",
+                  "  pm.collectionVariables.set('pedido_id', json.pedido_id);",
+                  "});",
+                  "pm.test('Status inicial eh confirmado', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('confirmado');",
+                  "});",
+                  "pm.test('Total calculado corretamente', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.total).to.be.a('number');",
+                  "  pm.expect(json.total).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade\": \"recife\",\n  \"itens\": [\n    { \"produto_id\": 1, \"quantidade\": 2 },\n    { \"produto_id\": 3, \"quantidade\": 1 }\n  ],\n  \"pagamento\": \"pix\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/pedidos", "host": ["{{base_url}}"], "path": ["pedidos"] }
+          }
+        },
+
+        {
+          "name": "TC10 - Pedido com carrinho vazio (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function() { pm.response.to.have.status(400); });",
+                  "pm.test('Erro: carrinho vazio', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro.toLowerCase()).to.include('vazio');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade\": \"recife\",\n  \"itens\": [],\n  \"pagamento\": \"pix\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/pedidos", "host": ["{{base_url}}"], "path": ["pedidos"] }
+          }
+        },
+
+        {
+          "name": "TC11 - Pedido sem forma de pagamento (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function() { pm.response.to.have.status(400); });",
+                  "pm.test('Erro informa pagamento obrigatorio', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro.toLowerCase()).to.include('pagamento');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade\": \"recife\",\n  \"itens\": [{ \"produto_id\": 1, \"quantidade\": 1 }],\n  \"pagamento\": \"\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/pedidos", "host": ["{{base_url}}"], "path": ["pedidos"] }
+          }
+        },
+
+        {
+          "name": "TC12 - Consultar status do pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Retorna status valido', function() {",
+                  "  var json = pm.response.json();",
+                  "  var statusValidos = ['confirmado', 'em_preparo', 'pronto', 'retirado', 'cancelado'];",
+                  "  pm.expect(statusValidos).to.include(json.status);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/pedidos/{{pedido_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos", "{{pedido_id}}", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "TC13 - Pedido ID inexistente (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', function() { pm.response.to.have.status(404); });",
+                  "pm.test('Erro: pedido nao encontrado', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/pedidos/PEDIDO-INEXISTENTE-999/status",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos", "PEDIDO-INEXISTENTE-999", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "TC14 - Listar historico de pedidos do usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Retorna array de pedidos', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.pedidos).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/pedidos/meus", "host": ["{{base_url}}"], "path": ["pedidos", "meus"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "4. Pagamento (Integração Externa)",
+      "item": [
+
+        {
+          "name": "TC15 - Solicitar pagamento via Pix (positivo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Retorna chave pix ou QR code', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.qr_code || json.chave_pix).to.be.a('string');",
+                  "});",
+                  "pm.test('Status eh pendente', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.status_pagamento).to.eql('pendente');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": \"{{pedido_id}}\",\n  \"metodo\": \"pix\",\n  \"valor\": 29.00\n}"
+            },
+            "url": { "raw": "{{base_url}}/pagamento/solicitar", "host": ["{{base_url}}"], "path": ["pagamento", "solicitar"] }
+          }
+        },
+
+        {
+          "name": "TC16 - Pagamento negado (simulado, negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 402 Payment Required', function() { pm.response.to.have.status(402); });",
+                  "pm.test('Mensagem de pagamento negado', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.status_pagamento).to.eql('negado');",
+                  "  pm.expect(json.motivo).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": \"{{pedido_id}}\",\n  \"metodo\": \"cartao_credito\",\n  \"valor\": 29.00,\n  \"simular_falha\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/pagamento/solicitar", "host": ["{{base_url}}"], "path": ["pagamento", "solicitar"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "5. Fidelidade",
+      "item": [
+
+        {
+          "name": "TC17 - Consultar pontos do usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Retorna saldo de pontos', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.pontos).to.be.a('number');",
+                  "  pm.expect(json.pontos).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/fidelidade/pontos", "host": ["{{base_url}}"], "path": ["fidelidade", "pontos"] }
+          }
+        },
+
+        {
+          "name": "TC18 - Resgatar recompensa com pontos suficientes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Confirmacao do resgate', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.sucesso).to.eql(true);",
+                  "  pm.expect(json.recompensa).to.be.a('string');",
+                  "  pm.expect(json.pontos_restantes).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recompensa_id\": \"suco_gratis\",\n  \"custo_pontos\": 100\n}"
+            },
+            "url": { "raw": "{{base_url}}/fidelidade/resgatar", "host": ["{{base_url}}"], "path": ["fidelidade", "resgatar"] }
+          }
+        },
+
+        {
+          "name": "TC19 - Resgatar sem pontos suficientes (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', function() { pm.response.to.have.status(422); });",
+                  "pm.test('Erro de pontos insuficientes', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro.toLowerCase()).to.include('pontos');",
+                  "  pm.expect(json.pontos_necessarios).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recompensa_id\": \"cafe_completo\",\n  \"custo_pontos\": 350\n}"
+            },
+            "url": { "raw": "{{base_url}}/fidelidade/resgatar", "host": ["{{base_url}}"], "path": ["fidelidade", "resgatar"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "6. Segurança",
+      "item": [
+
+        {
+          "name": "TC20 - Acesso sem token JWT (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function() { pm.response.to.have.status(401); });",
+                  "pm.test('Erro de autenticacao', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro.toLowerCase()).to.include('autenticação');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/cardapio?unidade=recife", "host": ["{{base_url}}"], "path": ["cardapio"], "query": [{ "key": "unidade", "value": "recife" }] }
+          }
+        },
+
+        {
+          "name": "TC21 - Acesso com token invalido (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function() { pm.response.to.have.status(401); });",
+                  "pm.test('Token invalido recusado', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.erro).to.include('token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer TOKEN_INVALIDO_XYZ_123" }],
+            "url": { "raw": "{{base_url}}/pedidos/meus", "host": ["{{base_url}}"], "path": ["pedidos", "meus"] }
+          }
+        }
+
+      ]
+    }
+
+  ]
+}

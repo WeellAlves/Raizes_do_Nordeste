@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raízes do Nordeste</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Tela de Login -->
+    <div class="tela ativa" id="tela-login">
+        <div class="login-box">
+            <h1>🌾 Raízes do Nordeste</h1>
+            <p class="subtitulo">Sabor nordestino todo dia</p>
+            <input type="email" id="login-email" placeholder="E-mail">
+            <input type="password" id="login-senha" placeholder="Senha">
+            <button onclick="fazerLogin()">Entrar</button>
+            <p class="erro" id="erro-login"></p>
+            <p class="link-cadastro" onclick="mostrarTela('tela-cadastro')">Não tem conta? Cadastre-se</p>
+        </div>
+    </div>
+
+    <!-- Tela de Cadastro -->
+    <div class="tela" id="tela-cadastro">
+        <div class="login-box">
+            <h2>🌾 Cadastro</h2>
+            <input type="text" id="cad-nome" placeholder="Nome completo">
+            <input type="email" id="cad-email" placeholder="E-mail">
+            <input type="password" id="cad-senha" placeholder="Senha">
+            
+            <div class="lgpd-box">
+                <input type="checkbox" id="lgpd-check">
+                <label>Aceito o uso dos meus dados conforme a <span class="link-lgpd" onclick="mostrarTela('tela-lgpd')">Política de Privacidade (LGPD)</span>.</label>
+            </div>
+
+            <button onclick="fazerCadastro()">Cadastrar</button>
+            <p class="erro" id="erro-cadastro"></p>
+            <button class="btn-secundario" onclick="mostrarTela('tela-login')">Já tenho conta</button>
+        </div>
+    </div>
+
+    <!-- Tela Política LGPD -->
+    <div class="tela" id="tela-lgpd">
+        <div class="login-box">
+            <h2>🔒 Política de Privacidade</h2>
+            <p><strong>A Raízes do Nordeste</strong> coleta os seguintes dados: <strong>nome, e-mail e histórico de pedidos</strong>.</p>
+            <p>Esses dados são usados apenas para personalizar sua experiência e gerenciar o programa de fidelidade.</p>
+            <p>Você pode solicitar a exclusão dos seus dados a qualquer momento pelo e-mail: <strong>privacidade@raizesnordeste.com.br</strong></p>
+            <p><em>Base legal: Consentimento do titular (Art. 7º, I - LGPD).</em></p>
+            <button onclick="mostrarTela('tela-cadastro')">Voltar</button>
+        </div>
+    </div>
+
+    <!-- Tela Principal Cardápio -->
+    <div class="tela" id="tela-cardapio">
+        <header>
+            <div class="header-top">
+                <h2>🌾 Raízes do Nordeste</h2>
+                <div class="header-info">
+                    <span id="nome-usuario">Olá, Usuário</span>
+                    <span class="pontos-badge" id="badge-pontos">⭐ 0 pts</span>
+                    <button class="btn-sair" onclick="sair()">Sair</button>
+                </div>
+            </div>
+
+            <!-- Seleção da Unidade -->
+            <div class="selecao-unidade">
+                <label>Unidade:</label>
+                <select id="select-unidade" onchange="carregarCardapio()">
+                    <option value="recife">Recife - Boa Vista</option>
+                    <option value="ceara">Ceará - Fortaleza</option>
+                    <option value="natal">Natal - Ponta Negra</option>
+                </select>
+            </div>
+
+            <!-- Abas de Navegação -->
+            <div class="abas">
+                <button class="aba ativa" onclick="mudarAba('cardapio', this)">Cardápio</button>
+                <button class="aba" onclick="mudarAba('meus-pedidos', this)">Meus Pedidos</button>
+                <button class="aba" onclick="mudarAba('fidelidade', this)">Fidelidade</button>
+            </div>
+        </header>
+
+        <!-- Aba Cardápio -->
+        <div class="conteudo-aba" id="aba-cardapio">
+            <div class="categorias">
+                <button class="cat ativa" onclick="filtrarCategoria('todos', this)">Todos</button>
+                <button class="cat" onclick="filtrarCategoria('cafe', this)">Café da Manhã</button>
+                <button class="cat" onclick="filtrarCategoria('salgados', this)">Salgados</button>
+                <button class="cat" onclick="filtrarCategoria('sucos', this)">Sucos</button>
+                <button class="cat" onclick="filtrarCategoria('junino', this)">Especial Junino</button>
+            </div>
+
+            <!-- Banner de Promoção -->
+            <div class="banner-promo">
+                🎉 <strong>Promoção do Dia:</strong> Combo Cuscuz + Suco com 20% de desconto!
+            </div>
+
+            <!-- Lista de Produtos -->
+            <div class="grid-produtos" id="lista-produtos"></div>
+        </div>
+
+        <!-- Aba Meus Pedidos -->
+        <div class="conteudo-aba escondido" id="aba-meus-pedidos">
+            <h3>Meus Pedidos</h3>
+            <div id="lista-pedidos"></div>
+        </div>
+
+        <!-- Aba Fidelidade -->
+        <div class="conteudo-aba escondido" id="aba-fidelidade">
+            <div class="fidelidade-box">
+                <h3>Programa de Fidelidade</h3>
+                <div class="pontos-total">
+                    <span>Seus pontos</span>
+                    <strong id="pontos-total">0</strong>
+                </div>
+                <p>A cada <strong>R$ 1,00</strong> gasto, você acumula <strong>1 ponto</strong>.</p>
+
+                <div class="recompensas">
+                    <h4>Recompensas disponíveis</h4>
+                    <div class="recompensa-item">
+                        <span> Suco Grátis <small>(100 pontos)</small></span>
+                        <button onclick="resgatar(100, 'Suco Grátis')">Resgatar</button>
+                    </div>
+                    <div class="recompensa-item">
+                        <span> Tapioca Grátis <small>(200 pontos)</small></span>
+                        <button onclick="resgatar(200, 'Tapioca Grátis')">Resgatar</button>
+                    </div>
+                    <div class="recompensa-item">
+                        <span> Café da Manhã Completo <small>(350 pontos)</small></span>
+                        <button onclick="resgatar(350, 'Café da Manhã Completo')">Resgatar</button>
+                    </div>
+                </div>
+                <p class="msg-sucesso" id="msg-fidelidade"></p>
+            </div>
+        </div>
+
+        <!-- Botão do Carrinho -->
+        <div class="carrinho-btn" id="carrinho-btn" onclick="mostrarCarrinho()">
+            🛒 <span id="qtd-carrinho">0</span> itens | R$ <span id="total-carrinho">0,00</span>
+        </div>
+    </div>
+
+    <!-- Tela do Carrinho -->
+    <div class="tela" id="tela-carrinho">
+        <div class="login-box carrinho-box">
+            <h2>🛒 Meu Carrinho</h2>
+            <div id="itens-carrinho"></div>
+
+            <div class="total-linha">
+                <span>Total:</span>
+                <strong id="total-carrinho-2">R$ 0,00</strong>
+            </div>
+
+            <label>Forma de Pagamento</label>
+            <select id="forma-pagamento">
+                <option value="">Selecione...</option>
+                <option value="Pix">Pix</option>
+                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                <option value="Cartão de Débito">Cartão de Débito</option>
+                <option value="Dinheiro">Dinheiro</option>
+            </select>
+
+            <button onclick="finalizarPedido()">Finalizar Pedido</button>
+            <p class="erro" id="erro-carrinho"></p>
+            <button class="btn-secundario" onclick="voltarCardapio()">Voltar</button>
+        </div>
+    </div>
+
+    <!-- Tela Status do Pedido -->
+    <div class="tela" id="tela-status">
+        <div class="login-box">
+            <h2>✅ Pedido Realizado!</h2>
+            <p class="numero-pedido" id="numero-pedido">Pedido RN-123456</p>
+
+            <div class="status-steps">
+                <div class="step ativo" id="step-confirmado">Confirmado</div>
+                <div class="step" id="step-preparo">Em Preparo</div>
+                <div class="step" id="step-pronto">Pronto</div>
+                <div class="step" id="step-retirado">Retirado</div>
+            </div>
+
+            <p id="status-texto">Seu pedido foi confirmado e está sendo preparado!</p>
+            <p class="pontos-ganhos" id="pontos-ganhos"></p>
+
+            <button onclick="voltarCardapio()">Novo Pedido</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
